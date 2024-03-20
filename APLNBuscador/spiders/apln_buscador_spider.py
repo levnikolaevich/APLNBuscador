@@ -1,14 +1,15 @@
 from typing import Any
 import scrapy
 import os
-
+from bs4 import BeautifulSoup
+import json
 
 class APLNSpider(scrapy.Spider):
     name = 'apln_spider'
 
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
-        self.max_pages = 10
+        self.max_pages = 50
         self.visited_urls = set()
 
     def start_requests(self, urls=None):
@@ -17,20 +18,52 @@ class APLNSpider(scrapy.Spider):
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
-    def parse(self, response):
+    def parse(self, response, **kwargs):
         # Adjusting to use a single .txt file and include page title
         page_name = response.url.split("/")[-2] or 'index'
         if response.url == 'https://www.ua.es':
             page_name = 'index'
 
         # Path to the output txt file
-        save_path = 'page_contents.txt'
+        save_path = 'rag-faiss/page_contents.txt'
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-        # Saving the page name and content with a delimiter
-        with open(save_path, 'a', encoding='utf-8') as f:
-            f.write(f"Page Name: {page_name} | Content:\n{response.text}\n\n")
-        self.log(f'Added content of {page_name} to {save_path}')
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        for script_or_style in soup(['script', 'style']):
+            script_or_style.decompose()
+
+        main_content = soup.find('main')
+        text = main_content.get_text(separator='\n', strip=True) if main_content else ''
+
+        if len(text) > 0:
+            # Saving the page name and content with a delimiter
+            with open(save_path, 'a', encoding='utf-8') as f:
+                f.write(f"Page Name: {page_name} url: {response.url} | Content:\n{text}\n\n")
+                f.write(f"=============================================================\n\n")
+            self.log(f'Added content of {page_name} to {save_path}')
+
+        if len(text) > 0:
+            data = {
+                "page_name": page_name,
+                "url": response.url,
+                "content": text
+            }
+
+            save_path_json = 'rag-faiss/page_contents.json'
+            if not os.path.isfile(save_path_json):
+                with open(save_path_json, 'w', encoding='utf-8') as f:
+                    json.dump([data], f, ensure_ascii=False, indent=4)
+            else:
+                with open(save_path_json, 'r', encoding='utf-8') as f:
+                    content = json.load(f)
+
+                content.append(data)
+
+                with open(save_path_json, 'w', encoding='utf-8') as f:
+                    json.dump(content, f, ensure_ascii=False, indent=4)
+
+            self.log(f'Added content of {page_name} to {save_path_json}')
 
         # Mark the current page as visited
         self.visited_urls.add(response.url)

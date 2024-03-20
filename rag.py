@@ -1,7 +1,7 @@
-import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
 import faiss
 import os
+import json
 
 
 class RagFAISS:
@@ -76,33 +76,19 @@ class RagFAISS:
         self.indexFlatIP = faiss.IndexFlatIP(d)
         self.indexFlatIP.add(embeddings)
 
-    def extract_text_to_paragraphs(self, folder_path="pdf_rag"):
+    def extract_text_to_paragraphs(self, json_path="rag-faiss/page_contents.json"):
+        # Iterate through all files in the specified folder
         paragraphs = []
 
-        # Iterate through all files in the specified folder
-        for filename in os.listdir(folder_path):
-            if filename.endswith(".pdf"):
-                pdf_path = os.path.join(folder_path, filename)
-                doc = fitz.open(pdf_path)
-
-                # Iterate through all pages in the document
-                for page in doc:
-                    text = page.get_text()
-
-                    # Split text into three parts with overlapping
-                    part_length = len(text) // 3
-                    overlap = int(part_length * 0.1)  # 10% overlap
-
-                    # Calculate start and end indexes for each part with overlap
-                    parts_indexes = [
-                        (0, part_length + overlap),
-                        (part_length - overlap, 2 * part_length + overlap),
-                        (2 * part_length - overlap, len(text))
-                    ]
-
-                    # Extract parts based on calculated indexes
-                    for start_index, end_index in parts_indexes:
-                        paragraph = text[start_index:end_index].strip()
-                        paragraphs.append(paragraph)
+        # Check if the JSON file exists
+        if os.path.exists(json_path):
+            # Open and read the JSON file
+            with open(json_path, 'r', encoding='utf-8') as json_file:
+                json_data = json.load(json_file)
+                # Assuming json_data is a list of objects with a 'content' field
+                for item in json_data:
+                    if 'content' in item:
+                        # Append the content field to paragraphs
+                        paragraphs.append(item['content'].strip())
 
         return paragraphs
