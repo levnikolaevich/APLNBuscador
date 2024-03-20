@@ -3,7 +3,6 @@ from rag import RagFAISS
 from chat_llm import Chat
 import tracemalloc
 import time
-import os
 
 tracemalloc.start()
 
@@ -21,7 +20,7 @@ def initialize_global_variables():
         rag_faiss = initialize_text_processing()
 
     if chat_llm is None:
-        chat_llm = Chat()
+        chat_llm = Chat(model_id="google/gemma-2b-it")
 
     print("initialize_global_variables finished")
 
@@ -81,7 +80,7 @@ def chat_with_ai(query):
     output = ''
     for sentence in chat_history:
         output += sentence
-    return output
+    return output, context_str
 
 
 def get_website_context(site_url):
@@ -91,25 +90,15 @@ def get_website_context(site_url):
 
 def main():
     with gr.Blocks() as buscador:
-        gr.Markdown("Crawl website")
-        with gr.Row():
-            with gr.Column():
-                link = gr.Textbox(
-                    label="Enter link to website: (ex. https://www.ua.es/ )")
-                with gr.Column():
-                    submit_button_yt = gr.Button("Download audio")
-                    # Process the YouTube link when the submit button is clicked.
-                    response = gr.Textbox(label="Video info:", interactive=False, lines=1)
-                    submit_button_yt.click(fn=get_website_context, inputs=[link], outputs=[response])
-
         gr.Markdown("Chat with Website Content")
         with gr.Row():
             with gr.Column():
                 query = gr.Textbox(label="Enter your query:")
                 submit_button = gr.Button("To ask")
-                response = gr.Textbox(label="Chat History:", interactive=False, lines=10)
+                responseOutput = gr.Textbox(label="Chat History:", interactive=False, lines=10)
+                RAGcontextOutput = gr.Textbox(label="RAG Context:", interactive=False, lines=10)
                 # Process the user query when the submit button is clicked.
-                submit_button.click(fn=chat_with_ai, inputs=[query], outputs=[response])
+                submit_button.click(fn=chat_with_ai, inputs=[query], outputs=[responseOutput, RAGcontextOutput])
 
     buscador.launch()
 
