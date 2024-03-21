@@ -13,7 +13,7 @@ SPIDER_MODULES = ["APLNBuscador.spiders"]
 NEWSPIDER_MODULE = "APLNBuscador.spiders"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True # DMG True
+ROBOTSTXT_OBEY = False # DMG True
 
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"

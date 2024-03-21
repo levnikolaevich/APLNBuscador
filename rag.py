@@ -5,7 +5,7 @@ import json
 
 
 class RagFAISS:
-    def __init__(self, model_st_id, index_file='cache/faiss_index.bin'):
+    def __init__(self, model_st_id, index_file='rag-faiss/faiss_index.bin'):
         # Initialize the SentenceTransformer model on creation of a RagFAISS instance
         self.index_file = index_file
         self.modelST = SentenceTransformer(model_st_id)
@@ -89,6 +89,6 @@ class RagFAISS:
                 for item in json_data:
                     if 'content' in item:
                         # Append the content field to paragraphs
-                        paragraphs.append(item['content'].strip())
+                        paragraphs.append(item)
 
         return paragraphs

@@ -76,7 +76,7 @@ class APLNSpider(scrapy.Spider):
         # Search for and follow links on the current page
         for next_page in response.css('a::attr(href)').getall():
             # Ignore links that do not contain .ua.es
-            if '.ua.es' not in next_page:
+            if 'web.ua.es' not in next_page:
                 continue
             next_url = response.urljoin(next_page)
             if next_url not in self.visited_urls:

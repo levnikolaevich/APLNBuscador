@@ -58,13 +58,15 @@ def chat_with_ai(query):
     global rag_faiss, chat_llm, chat_history
     context = ""
 
-    D, I, RAG_context = rag_faiss.search(query, k=3)
-    context_str = "\n".join(RAG_context)
+    D, I, RAG_context = rag_faiss.search(query, k=1)
+    content_list = [item["content"] for item in RAG_context]
+    context_str = "\n".join(content_list)
 
     context += "\n\nSite content:\n"
     context += "\n\n" + context_str + "\n"
 
-    final_prompt = f"Based on your knowledge and the following detailed context, please provide a comprehensive answer:\n\nCONTEXT:\n{context}\n\nQUESTION:\n{query}"
+    final_prompt = (f"Summarize the key details from a context, ensuring to retain the most crucial information " +
+                    f"and answer to the question:\n\nCONTEXT:\n{context}\n\nQUESTION:\n{query}")
     print("final_prompt:")
     print(final_prompt)
     start_time = time.time()
@@ -75,18 +77,15 @@ def chat_with_ai(query):
 
     chat_history.append("\n Q: " + query)
     chat_history.append("\n A: " + response)
+    chat_history.append("\n More info:")
+    for sentence in RAG_context:
+        chat_history.append("\n" + sentence['url'])
     chat_history.append("\n ------------------------")
 
     output = ''
     for sentence in chat_history:
         output += sentence
-    return output, context_str
-
-
-def get_website_context(site_url):
-    context = ""
-
-    return context
+    return output, final_prompt
 
 def main():
     with gr.Blocks() as buscador:
@@ -95,10 +94,12 @@ def main():
             with gr.Column():
                 query = gr.Textbox(label="Enter your query:")
                 submit_button = gr.Button("To ask")
-                responseOutput = gr.Textbox(label="Chat History:", interactive=False, lines=10)
-                RAGcontextOutput = gr.Textbox(label="RAG Context:", interactive=False, lines=10)
+                gr.Markdown("Chat History:")
+                responseOutput = gr.Textbox(label="", interactive=False, lines=10)
+                gr.Markdown("Final Prompt:")
+                FinalPromptOutput = gr.Textbox(label="", interactive=False, lines=10)
                 # Process the user query when the submit button is clicked.
-                submit_button.click(fn=chat_with_ai, inputs=[query], outputs=[responseOutput, RAGcontextOutput])
+                submit_button.click(fn=chat_with_ai, inputs=[query], outputs=[responseOutput, FinalPromptOutput])
 
     buscador.launch()
 
