@@ -18,6 +18,8 @@ class Chat:
             model_id (str): Identifier for the model to load (default is "google/gemma-2b-it").
         """
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu"
+        print(f"Device={self.device}")
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
         self.model = AutoModelForCausalLM.from_pretrained(model_id).to(self.device)
 

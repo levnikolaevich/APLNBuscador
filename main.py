@@ -6,6 +6,8 @@ import time
 
 tracemalloc.start()
 
+K_MAX_RESULTADOS_BUSCADOR = 1
+
 global rag_faiss, chat_llm, chat_history, isInited
 rag_faiss = None
 chat_llm = None
@@ -37,6 +39,7 @@ def initialize_text_processing(modelST_id='avsolatorio/GIST-small-Embedding-v0')
     """
     rag_faiss_db = RagFAISS(modelST_id)
     text2vec = rag_faiss_db.extract_text_to_paragraphs()
+    print(f"Number of paragraphs extracted: {len(text2vec)}")
     rag_faiss_db.read_or_create_faiss_index(text2vec)
     return rag_faiss_db
 
@@ -58,7 +61,7 @@ def chat_with_ai(query):
     global rag_faiss, chat_llm, chat_history
     context = ""
 
-    D, I, RAG_context = rag_faiss.search(query, k=1)
+    D, I, RAG_context = rag_faiss.search(query, k=K_MAX_RESULTADOS_BUSCADOR)
     content_list = [item["content"] for item in RAG_context]
     context_str = "\n".join(content_list)
 
@@ -70,13 +73,14 @@ def chat_with_ai(query):
     print("final_prompt:")
     print(final_prompt)
     start_time = time.time()
-    response = chat_llm.get_answer(final_prompt, 200)
+    #response = chat_llm.get_answer(final_prompt, 200)
+    response = "This is a test response"
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Time taken to get the response: {elapsed_time} seconds")
 
     chat_history.append("\n Q: " + query)
-    chat_history.append("\n A: " + response)
+    chat_history.append("\n A: " + final_prompt)
     chat_history.append("\n More info:")
     for sentence in RAG_context:
         chat_history.append("\n" + sentence['url'])
