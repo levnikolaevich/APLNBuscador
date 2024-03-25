@@ -65,7 +65,8 @@ class RagFAISS:
         """
         self.normalize = normalize
         self.text = paragraphs
-        embeddings = self.modelST.encode(self.text, show_progress_bar=True)
+        corpus = [item["content"] for item in paragraphs]
+        embeddings = self.modelST.encode(corpus, show_progress_bar=True)
 
         # Normalize embeddings if required
         if self.normalize:

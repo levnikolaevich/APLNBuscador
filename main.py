@@ -6,6 +6,8 @@ import time
 
 tracemalloc.start()
 
+K_MAX_RESULTADOS_BUSCADOR = 1
+
 global rag_faiss, chat_llm, chat_history, isInited
 rag_faiss = None
 chat_llm = None
@@ -58,7 +60,7 @@ def chat_with_ai(query):
     global rag_faiss, chat_llm, chat_history
     context = ""
 
-    D, I, RAG_context = rag_faiss.search(query, k=1)
+    D, I, RAG_context = rag_faiss.search(query, k=K_MAX_RESULTADOS_BUSCADOR)
     content_list = [item["content"] for item in RAG_context]
     context_str = "\n".join(content_list)
 
